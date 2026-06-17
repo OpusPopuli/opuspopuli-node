@@ -1,15 +1,15 @@
-# opuspopuli-region-template
+# opuspopuli-node
 
 Everything you need to stand up a production Opus Populi region: Cloudflare infrastructure, Mac Studio bootstrap, Docker Compose for production, backup pipeline, observability.
 
-Fork this template, edit a handful of region-specific values, follow the bootstrap guide. ~5–8 focused hours from sealed-box Mac Studio to public API.
+Use this GitHub template, edit a handful of region-specific values, follow the bootstrap guide. ~5–8 focused hours from sealed-box Mac Studio to public API.
 
 ## What this repo is
 
 Each Opus Populi region is operated independently — its own Cloudflare account, its own Mac Studio, its own domain. This repo is the **per-region deployment kit**: everything that belongs to one operator's deployment of one region.
 
 ```
-opuspopuli (central)              opuspopuli-region-<X> (you)
+opuspopuli (central)              opuspopuli-node-<region> (you)
 ─────────────────────             ──────────────────────────────
 Source code (apps/, packages/)    Cloudflare Terraform
 Dockerfiles                       docker-compose-prod.yml
@@ -36,7 +36,7 @@ The Mac Studio clones **this repo**, never `opuspopuli` itself. Images come pre-
 
 ### 1. Use this template
 
-GitHub → "Use this template" → "Create a new repository" → name it for your region (e.g. `opuspopuli-region-ca`). Clone it locally.
+GitHub → "Use this template" → "Create a new repository" → name it for your region (e.g. `opuspopuli-node-ca`). Clone it locally.
 
 ### 2. Configure region-specific values
 
@@ -117,8 +117,8 @@ At the Studio, clone this repo and run the bootstrap script:
 ```bash
 mkdir -p ~/Development
 cd ~/Development
-git clone https://github.com/<your-org>/opuspopuli-region-<X>
-cd opuspopuli-region-<X>
+git clone https://github.com/<your-org>/opuspopuli-node-<region>
+cd opuspopuli-node-<region>
 ./scripts/mac-studio-setup.sh
 ```
 
@@ -148,6 +148,18 @@ Browser at `https://app.<your-domain>` → sign up → magic link arrives via Re
 ## Ongoing operations
 
 - **Update images:** push to `main` in the central `opuspopuli` repo triggers the release workflow → new ghcr.io tags published. On your Studio: `docker compose -f docker-compose-prod.yml pull && docker compose -f docker-compose-prod.yml up -d --remove-orphans`.
+- **Pull upstream template updates** (security patches to Terraform, updated bootstrap script, new observability dashboards, etc.):
+  ```bash
+  # One-time setup, in your node repo's local checkout:
+  git remote add upstream https://github.com/OpusPopuli/opuspopuli-node
+
+  # When you want to pull in central updates:
+  git fetch upstream
+  git checkout -b chore/sync-upstream-$(date +%Y%m%d)
+  git merge upstream/main
+  # Resolve any conflicts (typically only in files you've region-customized
+  # like prod.tfvars, .env.production.example). Push and PR.
+  ```
 - **Change Cloudflare infra:** edit `infra/cloudflare/*.tf` or `environments/prod.tfvars` on a branch, PR, review the plan comment, merge → apply runs.
 - **Rotate the Cloudflare token:** create a new Account API token, update the GitHub Secret, delete the old token. Workflow picks it up on the next run.
 - **Rollback to a specific image build:** set `TAG=sha-<commit-sha>` in `.env.production` and re-run `docker compose pull && up -d`.

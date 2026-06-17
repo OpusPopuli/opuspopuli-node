@@ -165,7 +165,7 @@ prompt "seed-operator-vault.sql in place (or skip if seeding later)"
 section "Phase 5 — Sanity-check deployment repo layout"
 
 # This script runs from the region's own deployment repo (e.g.
-# <your-org>/opuspopuli-region-ca), which the operator already cloned before
+# <your-org>/opuspopuli-node-ca), which the operator already cloned before
 # invoking it. There's nothing to clone here — the compose YAML, bind-mount
 # sources, and Terraform code all live in this same working tree.
 #
