@@ -30,7 +30,7 @@ The pgsodium key file path and LaunchAgent label use the stable `opuspopuli` pla
 | Edge / TLS | Cloudflare Tunnel |
 | Frontend | Cloudflare Pages (already deploys via `pnpm cf:deploy`) |
 | Backend images | Built in GitHub Actions, pushed to `ghcr.io/opuspopuli/*`, Studio pulls — no local builds |
-| Container runtime | Docker Desktop — **never resize the disk image; size it 200 GB up front** |
+| Container runtime | Docker Desktop — see [`docker-resources.md`](./docker-resources.md) for the full memory / CPU / disk-image sizing table. **Never reduce the disk image size — set it large up front (300 GB recommended for a 1 TB Studio).** |
 | Storage | Internal 1 TB SSD, Docker-managed named volumes |
 | Supabase | Self-hosted on the Studio (no Supabase Cloud) |
 | Email | Resend (DKIM on `<your-domain>`) |
