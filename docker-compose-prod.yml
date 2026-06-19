@@ -88,10 +88,19 @@ x-healthcheck: &healthcheck
 services:
   # ---------------------------------------------------------------------------
   # Cloudflare Tunnel
+  #
+  # Gated behind the `public` profile so `docker compose up -d` brings up the
+  # stack *without* cloudflared by default. Pass `--profile public` to start
+  # the tunnel. This lets operators run the node locally (frontend on LAN /
+  # Tailscale, no public exposure) without needing a Tunnel token at all,
+  # and lets `create-op-node bootstrap --local-only` skip the cloudflared
+  # service cleanly. For production deployment, `bootstrap` activates the
+  # `public` profile by default.
   # ---------------------------------------------------------------------------
   cloudflared:
     image: cloudflare/cloudflared:2026.2.0
     container_name: opuspopuli-prod-cloudflared
+    profiles: [public]
     command: tunnel run
     environment:
       TUNNEL_TOKEN: ${TUNNEL_TOKEN}
