@@ -165,9 +165,18 @@ services:
       - postgres-data:/var/lib/postgresql/data
       # Mount Supabase init scripts into the postgres entrypoint's
       # init-scripts dir. These run on FIRST boot (empty data dir only).
-      # 00-opuspopuli-roles ensures supabase_admin exists before any other
-      # script depends on it.
-      - ./supabase/init/sql/00-opuspopuli-roles.sql:/docker-entrypoint-initdb.d/init-scripts/00-opuspopuli-roles.sql:ro
+      #
+      # IMPORTANT: do NOT add a defensive `CREATE ROLE supabase_admin`
+      # script with a numeric prefix that sorts before the image's own
+      # `00000000000000-initial-schema.sql`. The image's script does an
+      # unguarded `CREATE ROLE supabase_admin`; a pre-existing role from
+      # our defensive script makes it error with "already exists" and
+      # halts init for the rest of the migration chain — leaving the DB
+      # with ONLY the `postgres` role and breaking gotrue/postgrest/storage.
+      # (We made this mistake once; recovery required a full volume wipe.)
+      #
+      # The image creates supabase_admin + authenticator + the rest via
+      # its bundled init-scripts/00000000000000-initial-schema.sql.
       - ./supabase/init/sql/00-roles.sql:/docker-entrypoint-initdb.d/init-scripts/01-roles.sql:ro
       - ./supabase/init/sql/01-jwt.sql:/docker-entrypoint-initdb.d/init-scripts/02-jwt.sql:ro
       - ./supabase/init/sql/02-_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:ro
