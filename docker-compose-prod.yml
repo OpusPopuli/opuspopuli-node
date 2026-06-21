@@ -163,20 +163,18 @@ services:
       PGSODIUM_ROOT_KEY: ${PGSODIUM_ROOT_KEY:?PGSODIUM_ROOT_KEY is required — run create-op-node bootstrap}
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      # Mount Supabase init scripts into the postgres entrypoint's
-      # init-scripts dir. These run on FIRST boot (empty data dir only).
-      #
-      # IMPORTANT: do NOT add a defensive `CREATE ROLE supabase_admin`
-      # script with a numeric prefix that sorts before the image's own
-      # `00000000000000-initial-schema.sql`. The image's script does an
-      # unguarded `CREATE ROLE supabase_admin`; a pre-existing role from
-      # our defensive script makes it error with "already exists" and
-      # halts init for the rest of the migration chain — leaving the DB
-      # with ONLY the `postgres` role and breaking gotrue/postgrest/storage.
-      # (We made this mistake once; recovery required a full volume wipe.)
-      #
-      # The image creates supabase_admin + authenticator + the rest via
-      # its bundled init-scripts/00000000000000-initial-schema.sql.
+      # TOP-LEVEL: pre-create `supabase_admin` BEFORE migrate.sh runs.
+      # The image's migrate.sh opens with `psql -U supabase_admin` and
+      # assumes the role exists (it's pre-created during AMI build, but
+      # not on a fresh Docker named volume). Without this, migrate.sh's
+      # init-scripts loop never gets a chance to run. See the file
+      # header for the full rationale.
+      - ./supabase/init/sql/00-create-supabase-admin.sql:/docker-entrypoint-initdb.d/00-create-supabase-admin.sql:ro
+
+      # init-scripts/ subdir: processed by the image's migrate.sh, AS the
+      # `postgres` role, after supabase_admin exists. Runs on FIRST boot
+      # only (sequenced alphabetically; image's own 00-schema.sql,
+      # 00000000000000-initial-schema.sql, etc. interleave with ours).
       - ./supabase/init/sql/00-roles.sql:/docker-entrypoint-initdb.d/init-scripts/01-roles.sql:ro
       - ./supabase/init/sql/01-jwt.sql:/docker-entrypoint-initdb.d/init-scripts/02-jwt.sql:ro
       - ./supabase/init/sql/02-_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:ro
