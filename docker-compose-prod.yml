@@ -378,11 +378,14 @@ services:
     image: supabase/storage-api:v1.60.4
     container_name: opuspopuli-prod-storage
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/status"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    # No healthcheck: the `/status` endpoint that upstream's compose probes
+    # doesn't exist on storage-api v1.60.4 — wget --spider returns non-zero
+    # and Docker marks the container unhealthy even though the server is
+    # serving requests cleanly (verifiable via `docker logs`). Nothing in
+    # our compose depends on storage being `service_healthy` (rest depends
+    # only on `service_started`), so removing the noise is harmless.
+    # If a future storage-api release adds a `/health` endpoint we can
+    # restore a proper healthcheck.
     depends_on:
       db:
         condition: service_healthy
