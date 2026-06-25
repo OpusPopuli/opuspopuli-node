@@ -59,6 +59,12 @@ services:
     image: ghcr.io/opuspopuli/prompt-service:${PROMPTS_TAG:-latest}
     container_name: opuspopuli-prompts
     restart: unless-stopped
+    # The prompt-service CI publishes linux/amd64 only — no arm64 manifest.
+    # On Apple Silicon Mac Studios this forces Docker to use Rosetta-style
+    # x86_64 emulation, slower but functional. Long-term: prompt-service's
+    # release workflow should publish multi-arch (see opuspopuli#858 for
+    # the same fix on the main backend images).
+    platform: linux/amd64
     ports:
       # Exposed for direct admin / debug access on the host. Backend services
       # within the docker network reach it via the service hostname instead.
