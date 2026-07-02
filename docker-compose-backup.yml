@@ -57,7 +57,10 @@ services:
       # DB connection — defaults match opuspopuli-db across all envs.
       PGHOST: ${BACKUP_PGHOST:-opuspopuli-db}
       PGUSER: ${BACKUP_PGUSER:-postgres}
-      PGPASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      # `:?` (no weak fallback) to match the prod compose's secret policy —
+      # fail loudly at `up` time rather than auth-failing against the DB
+      # with a well-known default password.
+      PGPASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required — source your env file or launchd session}
       PGDATABASE: ${BACKUP_PGDATABASE:-postgres}
       # Schema version tag baked into snapshot filenames so restore can
       # detect drift between snapshot-time and restore-time code.
@@ -89,9 +92,12 @@ services:
       - opuspopuli-network
     restart: unless-stopped
 
-# Reuses the existing opuspopuli-network defined by the main compose
-# file. Declared as external so this overlay does not create a
-# duplicate network when brought up alongside an existing stack.
+# Reuses the opuspopuli-network defined by the base compose file this
+# overlay is layered onto (-f <base> -f docker-compose-backup.yml).
+# Deliberately NOT declared `external: true`: the merged project would
+# then refuse to create the network on first boot ("declared as
+# external, but could not be found"). Merging with the base definition
+# (which pins `name: opuspopuli-network`) means compose creates-or-
+# reuses the same network either way.
 networks:
-  opuspopuli-network:
-    external: true
+  opuspopuli-network: {}

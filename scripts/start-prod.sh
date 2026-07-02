@@ -213,7 +213,7 @@ fi
 # Verify containers can reach Ollama
 echo ""
 echo "Verifying LLM connectivity from containers..."
-if docker exec opuspopuli-prod-knowledge \
+if docker exec opuspopuli-knowledge \
   node -e "require('http').get('http://host.docker.internal:11434/', r => { process.exit(r.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))" 2>/dev/null; then
   echo "  Containers can reach Ollama via host.docker.internal:11434"
 else

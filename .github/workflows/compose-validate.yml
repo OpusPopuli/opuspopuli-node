@@ -1,0 +1,86 @@
+# =============================================================================
+# Compose validation — keep the prod stack and its overlays merge-compatible
+# =============================================================================
+#
+# The backup and prompt-service overlays are layered onto docker-compose-prod
+# at deploy time. Names (services, networks, hosts) referenced across file
+# boundaries aren't checked by anything until an operator runs `up` on the
+# Studio — this workflow runs `docker compose config` on every documented
+# file combination so a rename in one file that orphans another fails the PR
+# instead of the deployment. (Motivated by issue #21, where the backup
+# overlay silently drifted from the prod compose's service/network names.)
+#
+# Also asserts the supabase/postgres tag in backup/Dockerfile matches the
+# prod db service — pg_dump/pg_restore must match the server version
+# (see backup/README.md "Base image is pinned to the production DB image").
+# =============================================================================
+
+name: Compose Validate
+
+on:
+  pull_request:
+    paths:
+      - 'docker-compose-*.yml'
+      - 'backup/Dockerfile'
+      - '.github/workflows/compose-validate.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'docker-compose-*.yml'
+      - 'backup/Dockerfile'
+      - '.github/workflows/compose-validate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  compose-config:
+    name: docker compose config
+    runs-on: ubuntu-latest
+    env:
+      # Dummy values for every `:?`-required variable so `config` can render.
+      # These never start containers — validation only.
+      POSTGRES_PASSWORD: ci-dummy
+      JWT_SECRET: ci-dummy
+      PGSODIUM_ROOT_KEY: ci-dummy
+      SUPABASE_ANON_KEY: ci-dummy
+      SUPABASE_SERVICE_ROLE_KEY: ci-dummy
+      DASHBOARD_PASSWORD: ci-dummy
+      BACKUPS_DIR_HOST: /tmp/ci-backups
+      PROMPTS_DB_PASSWORD: ci-dummy
+      PROMPT_SERVICE_API_KEYS: ci:dummy
+      PROMPT_SERVICE_ADMIN_API_KEYS: ci-dummy
+      PROMPT_SERVICE_API_KEY: ci-dummy
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Validate every documented compose combination
+        run: |
+          set -euo pipefail
+          combos=(
+            "docker-compose-prod.yml"
+            "docker-compose-prod.yml docker-compose-backup.yml"
+            "docker-compose-prod.yml docker-compose-prompt-service.yml"
+            "docker-compose-prod.yml docker-compose-backup.yml docker-compose-prompt-service.yml"
+          )
+          for combo in "${combos[@]}"; do
+            args=""
+            for f in $combo; do args="$args -f $f"; done
+            echo "::group::docker compose $args config"
+            # shellcheck disable=SC2086
+            docker compose $args config --quiet
+            echo "::endgroup::"
+          done
+
+      - name: Assert backup image tag matches the prod db
+        run: |
+          set -euo pipefail
+          prod_tag=$(grep -oE 'supabase/postgres:[0-9.]+' docker-compose-prod.yml | head -1)
+          backup_tag=$(grep -oE 'supabase/postgres:[0-9.]+' backup/Dockerfile | head -1)
+          echo "prod db:      $prod_tag"
+          echo "backup image: $backup_tag"
+          if [ "$prod_tag" != "$backup_tag" ]; then
+            echo "::error::backup/Dockerfile base image ($backup_tag) must match the prod db image ($prod_tag) so pg_dump/pg_restore versions match the server. Bump them together."
+            exit 1
+          fi

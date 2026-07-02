@@ -21,7 +21,7 @@ adding or modifying the backup service itself.
 
 | Path | Role |
 |------|------|
-| `Dockerfile` | Builds the backup container. Inherits from `supabase/postgres:17.6.1.091` so `pg_dump` / `pg_restore` versions exactly match the production server. Installs supercronic as the in-container scheduler. |
+| `Dockerfile` | Builds the backup container. Inherits from the same `supabase/postgres` tag as the prod db service so `pg_dump` / `pg_restore` versions exactly match the production server (enforced by the compose-validate CI workflow). Installs supercronic as the in-container scheduler. |
 | `entrypoint.sh` | Container entrypoint. Dispatches between **scheduler mode** (no args → supercronic + crontab) and **one-shot mode** (args → exec args). Ad-hoc invocations use one-shot. |
 | `crontab` | supercronic-format schedule. Currently a single line: daily 03:00 backup. Edit here to change the schedule for all environments at once. |
 | `scripts/backup-db.sh` | The daily backup. `pg_dump --format=custom` piped through `gzip -9` into a host bind-mounted directory. Atomic rename via `.partial`, cross-mode `flock`, JSON-structured log lines, configurable retention. |
@@ -65,7 +65,8 @@ adding or modifying the backup service itself.
 
 ### Base image is pinned to the production DB image
 
-`FROM supabase/postgres:17.6.1.091` (not generic `postgres:17-alpine`).
+`FROM supabase/postgres:<same tag as docker-compose-prod.yml>` (not generic
+`postgres:17-alpine`).
 This guarantees `pg_dump` and `pg_restore` versions exactly match the
 server. PostgreSQL custom-format dumps are not forward-compatible
 across major-version mismatches; downgrade-side bugs are silent and

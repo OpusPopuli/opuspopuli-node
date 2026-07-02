@@ -30,7 +30,8 @@
 
 services:
   opuspopuli-prompts-db:
-    image: supabase/postgres:17.6.1.091
+    # Kept in lockstep with the main db image in docker-compose-prod.yml.
+    image: supabase/postgres:17.6.1.138
     container_name: opuspopuli-prompts-db
     restart: unless-stopped
     environment:
@@ -56,7 +57,7 @@ services:
       retries: 5
       start_period: 15s
     networks:
-      - opuspopuli-prod
+      - opuspopuli-network
     deploy:
       resources:
         limits:
@@ -78,7 +79,7 @@ services:
       opuspopuli-prompts-db:
         condition: service_healthy
     networks:
-      - opuspopuli-prod
+      - opuspopuli-network
     environment:
       # Connect as supabase_admin (NOT postgres). After the bundled
       # demote-postgres migration runs, the postgres role is NOSUPERUSER

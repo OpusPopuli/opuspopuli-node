@@ -5,7 +5,7 @@
 # series introduced format-version changes in custom dumps; using a
 # different pg_dump major than the server would silently produce
 # files the server can't restore.
-FROM supabase/postgres:17.6.1.091
+FROM supabase/postgres:17.6.1.138
 
 # supercronic — minimal-deps cron replacement we use as the in-container
 # scheduler. Single static Go binary, logs jobs to stdout (so

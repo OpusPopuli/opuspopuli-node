@@ -335,7 +335,7 @@ The prod compose already references `ghcr.io/opuspopuli/<service>:${TAG:-latest}
 1. **Connect cloudflared.** Already defined in `docker-compose-prod.yml`; reads `TUNNEL_TOKEN` from launchd env (Phase 4.2).
    ```bash
    docker compose -f docker-compose-prod.yml up -d cloudflared
-   docker logs <your-region>-prod-cloudflared --tail 50
+   docker logs opuspopuli-cloudflared --tail 50
    # expect "Registered tunnel connection" from 2+ edge POPs
    ```
 
