@@ -32,11 +32,7 @@
 # Naming: service/network/container names match the UAT stack in the central
 # opuspopuli repo (db service `opuspopuli-db`, network `opuspopuli-network`,
 # containers `opuspopuli-<svc>`) so the backup overlay, observability configs,
-# and operator docs work unchanged across environments. Nodes deployed before
-# this alignment (service `db`, network `opuspopuli-prod`): run
-# `docker compose -f docker-compose-prod.yml up -d --remove-orphans` — data
-# lives in named volumes and is unaffected — then remove the leftover network
-# with `docker network rm opuspopuli-prod`.
+# and operator docs work unchanged across environments.
 #
 # =============================================================================
 
