@@ -160,6 +160,7 @@ Browser at `https://app.<your-domain>` → sign up → magic link arrives via Re
   # Resolve any conflicts (typically only in files you've region-customized
   # like prod.tfvars, .env.production.example). Push and PR.
   ```
+- **Observability:** Grafana ships with datasources and three dashboards provisioned from this repo — see [`docs/observability.md`](docs/observability.md). It binds to loopback by default; `--grafana-tailnet` at bootstrap exposes it on your tailnet instead.
 - **Change Cloudflare infra:** edit `infra/cloudflare/*.tf` or `environments/prod.tfvars` on a branch, PR, review the plan comment, merge → apply runs.
 - **Rotate the Cloudflare token:** create a new Account API token, update the GitHub Secret, delete the old token. Workflow picks it up on the next run.
 - **Rollback to a specific image build:** set `TAG=sha-<commit-sha>` in `.env.production` and re-run `docker compose pull && up -d`.
@@ -200,6 +201,11 @@ scripts/
   start-prod.sh                           Health-check + pull + up
 docs/
   mac-studio-bootstrap.md                 Full step-by-step Studio runbook
+  observability.md                        Grafana access, shipped dashboards, LogQL
+grafana/
+  provisioning/datasources/               Loki + Prometheus + Tempo, as code
+  provisioning/dashboards/                Dashboard provider config
+  dashboards/                             Dashboard JSON (Node Health, Sync Pipeline, API Performance)
 ```
 
 ## License
