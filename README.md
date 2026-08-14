@@ -202,6 +202,7 @@ scripts/
 docs/
   mac-studio-bootstrap.md                 Full step-by-step Studio runbook
   observability.md                        Grafana access, shipped dashboards, LogQL
+  public-launch.md                        Taking a node public: DNS, auth URLs, cookies
 grafana/
   provisioning/datasources/               Loki + Prometheus + Tempo, as code
   provisioning/dashboards/                Dashboard provider config
