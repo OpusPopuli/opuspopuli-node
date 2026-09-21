@@ -265,6 +265,22 @@ x-healthcheck: &healthcheck
 x-llm-env: &llm-env
   LLM_URL: http://host.docker.internal:11434
   LLM_MODEL: ${LLM_MODEL:-qwen2.5:3b}
+  # Ingestion lane (opuspopuli roadmap §6.4). Structural analysis, civics
+  # extraction, detail crawling and PDF extraction are throughput-bound
+  # structured extraction over far more documents than analysis, where
+  # reliable JSON matters and verbatim fidelity does not — so they can run a
+  # smaller model at roughly a tenth the wall clock. Analysis keeps LLM_MODEL.
+  #
+  # EMPTY is the meaningful default, not a placeholder: the backend resolves
+  # these with `||`, so an empty string falls through to LLM_OLLAMA_MODEL and
+  # then LLM_MODEL and the lane behaves exactly as it did before the split.
+  # (It would NOT fall through under `??`, where an empty string wins — which
+  # is why the config uses `||` deliberately.)
+  #
+  # Set both, or neither: naming a host without a model sends the ANALYSIS
+  # model there, and the backend warns about precisely that at boot.
+  LLM_INGESTION_MODEL: ${LLM_INGESTION_MODEL:-}
+  LLM_INGESTION_URL: ${LLM_INGESTION_URL:-}
 
 services:
   # ---------------------------------------------------------------------------
