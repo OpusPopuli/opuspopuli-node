@@ -264,6 +264,16 @@ x-healthcheck: &healthcheck
 # verifies the actually-configured model.
 x-llm-env: &llm-env
   LLM_URL: http://host.docker.internal:11434
+  # The ANALYSIS lane — proposition analysis, minutes summaries, bios, RAG.
+  # Named for its job like every other model setting the node carries;
+  # create-op-node writes LLM_ANALYSIS_MODEL to .env.
+  #
+  # The nested default keeps a node bootstrapped BEFORE the lane naming
+  # working: its .env has only LLM_MODEL, so that is what resolves. The
+  # backend reads LLM_MODEL last in its own chain as well, so the two agree
+  # whichever key a node happens to carry.
+  LLM_ANALYSIS_MODEL: ${LLM_ANALYSIS_MODEL:-${LLM_MODEL:-qwen2.5:3b}}
+  LLM_ANALYSIS_URL: ${LLM_ANALYSIS_URL:-}
   LLM_MODEL: ${LLM_MODEL:-qwen2.5:3b}
   # Ingestion lane (opuspopuli roadmap §6.4). Structural analysis, civics
   # extraction, detail crawling and PDF extraction are throughput-bound
