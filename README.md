@@ -206,7 +206,7 @@ docs/
 grafana/
   provisioning/datasources/               Loki + Prometheus + Tempo, as code
   provisioning/dashboards/                Dashboard provider config
-  dashboards/                             Dashboard JSON (Node Health, Sync Pipeline, API Performance)
+  dashboards/                             Dashboard JSON (Node Health, Sync Pipeline, Ingestion Pipeline, API Performance, Users)
 ```
 
 ## License
